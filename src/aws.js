@@ -32,34 +32,54 @@ function buildUserDataScript(githubRegistrationToken, label) {
   }
 }
 
+function shuffle(array) {
+  // Fisher-Yates
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
 async function startEc2Instances(label, githubRegistrationToken) {
   const ec2 = new AWS.EC2();
 
   const userData = buildUserDataScript(githubRegistrationToken, label);
 
-  const params = {
-    ImageId: config.input.ec2ImageId,
-    InstanceType: config.input.ec2InstanceType,
-    MinCount: config.input.ec2InstanceCount,
-    MaxCount: config.input.ec2InstanceCount,
-    UserData: Buffer.from(userData.join('\n')).toString('base64'),
-    SubnetId: config.input.subnetId,
-    SecurityGroupIds: [config.input.securityGroupId],
-    IamInstanceProfile: { Name: config.input.iamRoleName },
-    TagSpecifications: config.tagSpecifications,
-  };
-
+  let parsedSubnetId;
   try {
-    const result = await ec2.runInstances(params).promise();
-    const ec2InstanceIds = result.Instances.map((ins) => ins.InstanceId)
-    for (const id of ec2InstanceIds) {
-      core.info(`AWS EC2 instance ${id} is started`);
-    }
-    return ec2InstanceIds;
+    parsedSubnetId = JSON.parse(config.input.subnetId);
   } catch (error) {
-    core.error('AWS EC2 instance starting error');
-    throw error;
+    parsedSubnetId = config.input.subnetId;
   }
+  const subnetIds = Array.isArray(parsedSubnetId) ? shuffle(parsedSubnetId) : [parsedSubnetId];
+
+  for (const subnetId of subnetIds) {
+    const params = {
+      ImageId: config.input.ec2ImageId,
+      InstanceType: config.input.ec2InstanceType,
+      MinCount: config.input.ec2InstanceCount,
+      MaxCount: config.input.ec2InstanceCount,
+      UserData: Buffer.from(userData.join('\n')).toString('base64'),
+      SubnetId: subnetId,
+      SecurityGroupIds: [config.input.securityGroupId],
+      IamInstanceProfile: { Name: config.input.iamRoleName },
+      TagSpecifications: config.tagSpecifications,
+    };
+
+    try {
+      const result = await ec2.runInstances(params).promise();
+      const ec2InstanceIds = result.Instances.map((ins) => ins.InstanceId);
+      for (const id of ec2InstanceIds) {
+        core.info(`AWS EC2 instance ${id} is started using subnetId ${subnetId}`);
+      }
+      return ec2InstanceIds;
+    } catch (error) {
+      core.info(`Attempt to start AWS EC2 instance using subnetId ${subnetId} failed: ${error.message}`);
+    }
+  }
+
+  throw new Error('Failed to start EC2 instance with all provided subnetIds');
 }
 
 async function terminateEc2Instance(ec2InstanceId) {
