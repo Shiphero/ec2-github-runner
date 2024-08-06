@@ -17,6 +17,11 @@ Check the [internal docs](https://docs.shiphero.xyz/ci.html#horizontally-scaled-
   This minimizes the chance of the `InsufficientInstanceCapacity` error, by balancing and trying 
   subnetworks in different subzones
 
-- [Reduce the waiting and polling intervals](https://github.com/Shiphero/ec2-github-runner/blob/97e4566a338e61490ce0a5b944e62801041faccb/src/gh.js#L63) for the runners registering. 
+- <strike>[Reduce the waiting and polling intervals](https://github.com/Shiphero/ec2-github-runner/blob/97e4566a338e61490ce0a5b944e62801041faccb/src/gh.js#L63) for the runners registering. 
 
-  This allows to save around 45' on the "start" step. 
+  This allows to save around 45' on the "start" step. </strike>
+
+  Reverted in 5659035ee505 because we was hitting Github rate limits for personal tokens.
+
+- [Increases the page size when listing runners](https://github.com/Shiphero/ec2-github-runner/pull/2/commits/e3aae63b6a8bd136b0fd9460468dc85097a8d273) to reduce the number or requests to Github API. 
+
