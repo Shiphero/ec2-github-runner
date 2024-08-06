@@ -60,8 +60,8 @@ async function removeRunners() {
 
 async function waitForRunnersRegistered(label) {
   const timeoutMinutes = 3;
-  const retryIntervalSeconds = 5;
-  const quietPeriodSeconds = 10;
+  const retryIntervalSeconds = 10;
+  const quietPeriodSeconds = 30;
   let waitSeconds = 0;
 
   core.info(`Waiting ${quietPeriodSeconds}s for the AWS EC2 instance to be registered in GitHub as a new self-hosted runner`);
