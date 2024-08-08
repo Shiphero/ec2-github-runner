@@ -21,7 +21,8 @@ Check the [internal docs](https://docs.shiphero.xyz/ci.html#horizontally-scaled-
 
   This allows to save around 45' on the "start" step. </strike>
 
-  Reverted in 5659035ee505 because we was hitting Github rate limits for personal tokens.
+  Reverted in [5659035ee505](https://github.com/Shiphero/ec2-github-runner/commit/5659035ee5055b3c32cd4d104ccfa339472250b0) because we were hitting Github's rate limit for personal tokens.
 
 - [Increases the page size when listing runners](https://github.com/Shiphero/ec2-github-runner/pull/2/commits/e3aae63b6a8bd136b0fd9460468dc85097a8d273) to reduce the number or requests to Github API. 
 
+- [Avoid failures when other runners are already registered with same name](https://github.com/Shiphero/ec2-github-runner/pull/4) by assigning a random name to the instances. 
