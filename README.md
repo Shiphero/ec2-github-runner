@@ -28,3 +28,14 @@ Check the [internal docs](https://docs.shiphero.xyz/ci.html#horizontally-scaled-
 - [Avoid failures when other runners are already registered with same name](https://github.com/Shiphero/ec2-github-runner/pull/4) by assigning a random name to the instances. 
 
 - [Support for using spot instances](https://github.com/machulav/ec2-github-runner/pull/171)
+
+## Build
+```sh
+make docker-build
+```
+
+Or using node 16:
+```sh
+npm install
+make
+```
