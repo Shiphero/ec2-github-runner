@@ -14,7 +14,17 @@ inputs:
   github-token:
     description: >-
       GitHub Personal Access Token with the 'repo' scope assigned.
-    required: true
+      Required if not using GitHub App authentication.
+    required: false
+  github-app-id:
+    description: "The ID of the GitHub App."
+    required: false
+  github-app-private-key:
+    description: "The private key of the GitHub App."
+    required: false
+  github-app-installation-id:
+    description: "The installation ID of the GitHub App."
+    required: false
   ec2-image-id:
     description: >-
       EC2 Image Id (AMI). The new runner will be launched from this image.
