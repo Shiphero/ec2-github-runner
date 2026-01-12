@@ -1,12 +1,37 @@
 const core = require('@actions/core');
 const github = require('@actions/github');
+const { App } = require('octokit');
 const _ = require('lodash');
 const config = require('./config');
+
+/**
+ * Returns an Octokit instance authenticated via Personal Access Token
+ * or GitHub App Installation Token.
+ */
+async function getAuthenticatedOctokit() {
+  // If a standard PAT is provided, stick to the default behavior
+  if (config.input.githubToken) {
+    return github.getOctokit(config.input.githubToken);
+  }
+
+  // Use the App class for GitHub App authentication
+  if (config.input.appId && config.input.privateKey && config.input.installationId) {
+    const app = new App({
+      appId: config.input.appId,
+      privateKey: config.input.privateKey,
+    });
+
+    // Returns an Octokit instance authenticated for the specific installation
+    return await app.getInstallationOctokit(config.input.installationId);
+  }
+
+  throw new Error('Missing auth: Provide github_token or app_id, private_key, and installation_id');
+}
 
 // use the unique label to find the runner
 // as we don't have the runner's id, it's not possible to get it in any other way
 async function getRunners(label) {
-  const octokit = github.getOctokit(config.input.githubToken);
+  const octokit = await getAuthenticatedOctokit();
 
   try {
     const runners = await octokit.paginate('GET /repos/{owner}/{repo}/actions/runners', {
@@ -22,7 +47,7 @@ async function getRunners(label) {
 
 // get GitHub Registration Token for registering a self-hosted runner
 async function getRegistrationToken() {
-  const octokit = github.getOctokit(config.input.githubToken);
+  const octokit = await getAuthenticatedOctokit();
 
   try {
     const response = await octokit.request('POST /repos/{owner}/{repo}/actions/runners/registration-token', config.githubContext);
@@ -36,7 +61,7 @@ async function getRegistrationToken() {
 
 async function removeRunners() {
   const runners = await getRunners(config.input.label);
-  const octokit = github.getOctokit(config.input.githubToken);
+  const octokit = await getAuthenticatedOctokit();
 
   // skip the runner removal process if the runner is not found
   if (!runners) {
@@ -60,6 +85,7 @@ async function removeRunners() {
     throw firstError;
   }
 }
+
 
 async function waitForRunnersRegistered(label) {
   const timeoutMinutes = 3;
