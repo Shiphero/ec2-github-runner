@@ -6,6 +6,11 @@ class Config {
     this.input = {
       mode: core.getInput('mode'),
       githubToken: core.getInput('github-token'),
+      // GitHub App Auth Inputs
+      appId: core.getInput('github-app-id'),
+      privateKey: core.getInput('github-app-private-key'),
+      installationId: core.getInput('github-app-installation-id'),
+      // EC2 Inputs
       ec2ImageId: core.getInput('ec2-image-id'),
       ec2InstanceType: core.getInput('ec2-instance-type'),
       subnetId: core.getInput('subnet-id'),
@@ -44,8 +49,14 @@ class Config {
       throw new Error(`The 'mode' input is not specified`);
     }
 
-    if (!this.input.githubToken) {
-      throw new Error(`The 'github-token' input is not specified`);
+    // Check if at least one authentication method is fully provided
+    const hasToken = !!this.input.githubToken;
+    const hasAppAuth = !!(this.input.appId && this.input.privateKey && this.input.installationId);
+
+    if (!hasToken && !hasAppAuth) {
+      throw new Error(
+        "Authentication error: Please provide either 'github-token' OR 'github-app-id', 'github-app-private-key', and 'github-app-installation-id'."
+      );
     }
 
     if (this.input.mode === 'start') {
